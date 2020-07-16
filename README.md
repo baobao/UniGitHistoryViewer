@@ -4,10 +4,19 @@ UniGitHistoryViewer is an extension to view git logs in UnityEditor.
 
 ![image](https://user-images.githubusercontent.com/144386/87670513-cc0d1a80-c7aa-11ea-8376-c54593b6d7d4.png)
 
+# Usage
+
+You can open tracker window in `Tools` -> `UniGitHistoryViewer`.
+Select a file or folder from Project and click `Check History`.
+The number you enter in count is the maximum number of logs.
+
+
+## Displayed information
+
 - date
 - author
 - commit message
-- commit hash
+- (commit hash)
 
 The `C` on the left is a button that copies the commit hash to the clipboard.
 
