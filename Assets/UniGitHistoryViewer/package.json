@@ -1,0 +1,11 @@
+{
+  "name": "info.shibuya24.uni-git-history-viewer",
+  "displayName": "UniGitHistoryViewer",
+  "version": "0.0.1",
+  "unity": "2018.4",
+  "description": "UniGitHistoryViewer is an extension to view git logs in UnityEditor.",
+  "keywords": [ "Unity", "C#", "git" ],
+  "license": "MIT",
+  "category": "Unity",
+  "dependencies": {}
+}
