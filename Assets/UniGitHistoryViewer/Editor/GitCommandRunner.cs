@@ -26,20 +26,19 @@ namespace info.shibuya24
     /// </summary>
     internal static class GitCommandRunner
     {
-        private const string GitExecutable = "git";
-
         // Without these, non-ASCII paths are octal-escaped and Japanese commit messages are garbled on Windows.
         private const string EncodingOptions = "-c core.quotepath=false -c i18n.logOutputEncoding=UTF-8";
 
         private static readonly Encoding Utf8 = new UTF8Encoding(false);
 
-        public static GitCommandResult Run(string workingDirectory, string arguments, CancellationToken ct)
+        /// <param name="gitPath">Full path from <see cref="GitExecutableLocator"/>.</param>
+        public static GitCommandResult Run(string gitPath, string workingDirectory, string arguments, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
-                FileName = GitExecutable,
+                FileName = gitPath,
                 Arguments = $"{EncodingOptions} {arguments}",
                 WorkingDirectory = workingDirectory,
                 UseShellExecute = false,
@@ -49,6 +48,11 @@ namespace info.shibuya24
                 StandardOutputEncoding = Utf8,
                 StandardErrorEncoding = Utf8,
             };
+
+            // The viewer only reads history, so git must never wait for credentials or take the index lock
+            // that the user's own git client may need at the same time.
+            startInfo.EnvironmentVariables["GIT_TERMINAL_PROMPT"] = "0";
+            startInfo.EnvironmentVariables["GIT_OPTIONAL_LOCKS"] = "0";
 
             using (Process process = Process.Start(startInfo))
             {

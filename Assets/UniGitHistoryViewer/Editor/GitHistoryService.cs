@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 namespace info.shibuya24
@@ -60,13 +61,31 @@ namespace info.shibuya24
     /// </summary>
     internal static class GitHistoryService
     {
+        public const string GitNotFoundMessage =
+            "Git was not found on this computer.\n" +
+            "Install Git (https://git-scm.com/) and restart Unity. If Git is already installed, make sure it is on PATH.";
+
+        private const string NotRepositoryMessage = "The selected asset is not inside a Git repository.";
+
         public static GitHistoryResult LoadHistory(GitHistoryTarget target, int maxCount, CancellationToken ct)
         {
+            string gitPath = GitExecutableLocator.Find();
+            if (gitPath == null)
+            {
+                return GitHistoryResult.Failure(GitNotFoundMessage);
+            }
+
+            // The window restores its last target after a domain reload, and that asset may have been deleted meanwhile.
+            if (Directory.Exists(target.WorkingDirectory) == false)
+            {
+                return GitHistoryResult.Failure($"The selected asset no longer exists: {target.AssetPath}");
+            }
+
             GitCommandResult location = GitCommandRunner.Run(
-                target.WorkingDirectory, "rev-parse --show-toplevel --show-prefix", ct);
+                gitPath, target.WorkingDirectory, "rev-parse --show-toplevel --show-prefix", ct);
             if (location.IsSuccess == false)
             {
-                return GitHistoryResult.Failure(location.Error.Trim());
+                return GitHistoryResult.Failure($"{NotRepositoryMessage}\n\n{location.Error.Trim()}");
             }
 
             string repositoryRoot = ResolveRepositoryRoot(target.WorkingDirectory, location.Output);
@@ -76,7 +95,7 @@ namespace info.shibuya24
             string arguments = "--literal-pathspecs log " +
                                $"--max-count={maxCount} {follow}--pretty=format:{GitLogParser.LogFormat} " +
                                $"-- {GitCommandRunner.Quote(target.Pathspec)}";
-            GitCommandResult log = GitCommandRunner.Run(target.WorkingDirectory, arguments, ct);
+            GitCommandResult log = GitCommandRunner.Run(gitPath, target.WorkingDirectory, arguments, ct);
             if (log.IsSuccess == false)
             {
                 return GitHistoryResult.Failure(log.Error.Trim());
@@ -87,11 +106,17 @@ namespace info.shibuya24
 
         public static GitChangedFilesResult LoadChangedFiles(string repositoryRoot, GitCommit commit, CancellationToken ct)
         {
+            string gitPath = GitExecutableLocator.Find();
+            if (gitPath == null)
+            {
+                return GitChangedFilesResult.Failure(GitNotFoundMessage);
+            }
+
             // A merge has no single diff. Comparing with the first parent shows what the merge brought into the branch.
             string arguments = commit.IsMerge
                 ? $"diff-tree -r -z -M --name-status {commit.ParentHashes[0]} {commit.Hash}"
                 : $"diff-tree -r -z -M --name-status --no-commit-id --root {commit.Hash}";
-            GitCommandResult result = GitCommandRunner.Run(repositoryRoot, arguments, ct);
+            GitCommandResult result = GitCommandRunner.Run(gitPath, repositoryRoot, arguments, ct);
             if (result.IsSuccess == false)
             {
                 return GitChangedFilesResult.Failure(result.Error.Trim());
