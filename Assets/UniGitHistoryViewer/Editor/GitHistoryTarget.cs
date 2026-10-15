@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -56,19 +58,38 @@ namespace info.shibuya24
         /// </summary>
         public string ToAssetPath(string fullPath)
         {
-            string prefix = _physicalRoot + "/";
-            if (fullPath.StartsWith(prefix) == false)
+            string relative = GetRelativePath(fullPath, _physicalRoot);
+            if (relative == null)
             {
                 return null;
             }
 
-            string relative = fullPath.Substring(prefix.Length);
             return _assetRoot.Length == 0 ? relative : $"{_assetRoot}/{relative}";
         }
 
         public static string NormalizePath(string path)
         {
             return path.Replace('\\', '/').TrimEnd('/');
+        }
+
+        /// <summary>
+        /// Converts to the precomposed (NFC) form. Git on macOS reports NFC names, while Unity keeps the decomposed (NFD)
+        /// names read from the file system, so Japanese names such as "ダ" must be compared in one form.
+        /// </summary>
+        public static string Precompose(string path)
+        {
+            return path.Normalize(NormalizationForm.FormC);
+        }
+
+        /// <summary>
+        /// Returns <paramref name="path"/> relative to <paramref name="root"/> in NFC form, or null when it is outside.
+        /// Comparison is ordinal because culture-aware comparison treats NFC and NFD as equal even though their lengths differ.
+        /// </summary>
+        public static string GetRelativePath(string path, string root)
+        {
+            string precomposedPath = Precompose(path);
+            string prefix = Precompose(root) + "/";
+            return precomposedPath.StartsWith(prefix, StringComparison.Ordinal) ? precomposedPath.Substring(prefix.Length) : null;
         }
     }
 }

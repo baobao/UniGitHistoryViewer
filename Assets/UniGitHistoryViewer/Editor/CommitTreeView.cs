@@ -95,7 +95,16 @@ namespace info.shibuya24
         /// </summary>
         public void SelectCommit(int index)
         {
-            SetSelection(new[] {index}, TreeViewSelectionOptions.RevealAndFrame);
+            SetSelection(new[] {index}, TreeViewSelectionOptions.None);
+
+            // Framing right after a reload uses a zero-height view and scrolls the first row out of sight.
+            if (index == 0)
+            {
+                state.scrollPos = Vector2.zero;
+                return;
+            }
+
+            FrameItem(index);
         }
 
         protected override TreeViewItem BuildRoot()
@@ -108,6 +117,26 @@ namespace info.shibuya24
             }
 
             return root;
+        }
+
+        // The default search result is sorted by name, which would break the chronological order of commits.
+        protected override IList<TreeViewItem> BuildRows(TreeViewItem root)
+        {
+            if (hasSearch == false)
+            {
+                return base.BuildRows(root);
+            }
+
+            List<TreeViewItem> rows = new List<TreeViewItem>();
+            foreach (TreeViewItem item in root.children)
+            {
+                if (DoesItemMatchSearch(item, searchString))
+                {
+                    rows.Add(item);
+                }
+            }
+
+            return rows;
         }
 
         protected override bool CanMultiSelect(TreeViewItem item)
