@@ -95,7 +95,16 @@ namespace info.shibuya24
         /// </summary>
         public void SelectCommit(int index)
         {
-            SetSelection(new[] {index}, TreeViewSelectionOptions.RevealAndFrame);
+            SetSelection(new[] {index}, TreeViewSelectionOptions.None);
+
+            // Framing right after a reload uses a zero-height view and scrolls the first row out of sight.
+            if (index == 0)
+            {
+                state.scrollPos = Vector2.zero;
+                return;
+            }
+
+            FrameItem(index);
         }
 
         protected override TreeViewItem BuildRoot()
