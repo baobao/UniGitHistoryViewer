@@ -2,23 +2,27 @@
 
 UniGitHistoryViewer is an extension to view git logs in UnityEditor.
 
-![image](https://user-images.githubusercontent.com/144386/87670513-cc0d1a80-c7aa-11ea-8376-c54593b6d7d4.png)
+![screenshot](Docs/images/screenshot.png)
 
 # Usage
 
-You can open tracker window in `Tools` -> `UniGitHistoryViewer`.
-Select a file or folder from Project and click `Check History`.
-The number you enter in count is the maximum number of logs.
+Open the window from `Tools` -> `UniGitHistoryViewer`, or right-click an asset in the Project window and choose `Show Git History`.
 
+The window follows the selection in the Project window. Click the lock icon on the tab to keep showing the current asset.
 
-## Displayed information
+- Select a commit to see its full message, author, date, hash and the files it changed
+- Click a changed file to highlight it in the Project window
+- Filter commits by message, author or hash with the search field
+- `Max` sets the maximum number of commits to load
+- Copy the hash with the `Copy` button, `Cmd/Ctrl + C`, or the right-click menu
+- Files keep their history across renames (`git log --follow`)
+- Works with files in local (`file:`) packages as well as `Assets`
 
-- date
-- author
-- commit message
-- (commit hash)
+## Requirements
 
-The `C` on the left is a button that copies the commit hash to the clipboard.
+- `git` must be available on `PATH`
+- Unity 2019.4 or later (tested with Unity 6000.3)
+
 
 ## UPM Package
 
