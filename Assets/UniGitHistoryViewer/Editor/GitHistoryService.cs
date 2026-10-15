@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -135,9 +136,10 @@ namespace info.shibuya24
                 return workingDirectory;
             }
 
-            string suffix = "/" + prefix;
-            return workingDirectory.EndsWith(suffix)
-                ? workingDirectory.Substring(0, workingDirectory.Length - suffix.Length)
+            string precomposedDirectory = GitHistoryTarget.Precompose(workingDirectory);
+            string suffix = "/" + GitHistoryTarget.Precompose(prefix);
+            return precomposedDirectory.EndsWith(suffix, StringComparison.Ordinal)
+                ? precomposedDirectory.Substring(0, precomposedDirectory.Length - suffix.Length)
                 : topLevel;
         }
     }

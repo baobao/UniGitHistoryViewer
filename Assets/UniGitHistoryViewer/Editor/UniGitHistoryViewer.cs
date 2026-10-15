@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -293,9 +295,9 @@ namespace info.shibuya24
             foreach (GitChangedFile file in result.Files)
             {
                 string assetPath = _target.ToAssetPath($"{_history.RepositoryRoot}/{file.Path}");
-                bool exists = assetPath != null && string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(assetPath)) == false;
-                bool isTarget = IsTargetFile(file.Path, targetRelativePath) || (file.OldPath != null && IsTargetFile(file.OldPath, targetRelativePath));
-                rows.Add(new ChangedFileRow(file, exists ? assetPath : null, isTarget));
+                bool isTarget = IsTargetFile(GitHistoryTarget.Precompose(file.Path), targetRelativePath)
+                                || (file.OldPath != null && IsTargetFile(GitHistoryTarget.Precompose(file.OldPath), targetRelativePath));
+                rows.Add(new ChangedFileRow(file, assetPath == null ? null : FindExistingAssetPath(assetPath), isTarget));
             }
 
             _changedFilesCache[commit.Hash] = rows;
@@ -303,15 +305,28 @@ namespace info.shibuya24
 
         private string ToRepositoryRelativePath(string fullPath)
         {
-            string prefix = _history.RepositoryRoot + "/";
-            return fullPath.StartsWith(prefix) ? fullPath.Substring(prefix.Length) : string.Empty;
+            return GitHistoryTarget.GetRelativePath(fullPath, _history.RepositoryRoot) ?? string.Empty;
+        }
+
+        // Unity keeps decomposed (NFD) names on macOS, so the precomposed path from git may not match the asset path as is.
+        private static string FindExistingAssetPath(string assetPath)
+        {
+            foreach (string candidate in new[] {assetPath, assetPath.Normalize(NormalizationForm.FormD)})
+            {
+                if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(candidate)) == false)
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
 
         private bool IsTargetFile(string repositoryRelativePath, string targetRelativePath)
         {
             if (_target.IsDirectory)
             {
-                return targetRelativePath.Length == 0 || repositoryRelativePath.StartsWith(targetRelativePath + "/");
+                return targetRelativePath.Length == 0 || repositoryRelativePath.StartsWith(targetRelativePath + "/", StringComparison.Ordinal);
             }
 
             return repositoryRelativePath == targetRelativePath;
@@ -451,7 +466,7 @@ namespace info.shibuya24
             }
 
             GUIContent content = new GUIContent(
-                _target.AssetPath,
+                GitHistoryTarget.Precompose(_target.AssetPath),
                 AssetDatabase.GetCachedIcon(_target.AssetPath),
                 _isLocked ? "Locked. Click to show in Project window" : "Click to show in Project window");
             Vector2 iconSize = EditorGUIUtility.GetIconSize();
