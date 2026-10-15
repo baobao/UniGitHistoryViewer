@@ -119,6 +119,26 @@ namespace info.shibuya24
             return root;
         }
 
+        // The default search result is sorted by name, which would break the chronological order of commits.
+        protected override IList<TreeViewItem> BuildRows(TreeViewItem root)
+        {
+            if (hasSearch == false)
+            {
+                return base.BuildRows(root);
+            }
+
+            List<TreeViewItem> rows = new List<TreeViewItem>();
+            foreach (TreeViewItem item in root.children)
+            {
+                if (DoesItemMatchSearch(item, searchString))
+                {
+                    rows.Add(item);
+                }
+            }
+
+            return rows;
+        }
+
         protected override bool CanMultiSelect(TreeViewItem item)
         {
             return false;
