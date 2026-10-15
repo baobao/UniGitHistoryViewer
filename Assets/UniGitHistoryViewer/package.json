@@ -8,8 +8,15 @@
   "license": "MIT",
   "category": "Unity",
   "author": {
-    "name": "baobao",
-    "url": "https://shibuya24.info/"
+    "name": "ohbashunsuke",
+    "url": "https://ohbashunsuke.com/"
+  },
+  "documentationUrl": "https://github.com/baobao/UniGitHistoryViewer#readme",
+  "changelogUrl": "https://github.com/baobao/UniGitHistoryViewer/blob/master/Assets/UniGitHistoryViewer/CHANGELOG.md",
+  "licensesUrl": "https://github.com/baobao/UniGitHistoryViewer/blob/master/LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/baobao/UniGitHistoryViewer.git"
   },
   "dependencies": {}
 }
